@@ -1,4 +1,11 @@
 {
+  "name": "clarityai-backend",
+  "version": "1.0.0",
+  "description": "ClarityAI Backend API for content summarization",
+  "main": "dist/server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@types/jsdom": "^21.1.6",
     "nodemon": "^3.1.10",
@@ -15,9 +22,11 @@
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
     "jsdom": "^23.0.1",
-    "ts-node-dev": "^2.0.0"
+    "ts-node": "^2.0.0"
   },
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn src/server.ts"
   }
 }

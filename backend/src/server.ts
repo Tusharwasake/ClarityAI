@@ -16,7 +16,7 @@ import routes from "./routes";
 import { corsMiddleware, errorHandler, requestLogger } from "./middleware";
 
 const app: express.Application = express();
-const PORT = process.env.SERVER_PORT || 3000;
+const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 
 // Basic Express middleware
 app.use(express.json({ limit: "10mb" })); // Parse JSON requests up to 10MB
