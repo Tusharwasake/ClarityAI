@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClarityAI</title>
+    <link rel="stylesheet" href="styles/popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <div class="popup-header">
+        <h1>ClarityAI</h1>
+        <p>Smart Content Summarizer</p>
+      </div>
+
+      <div class="tab-navigation">
+        <button class="tab-btn active" id="summaries-tab">Summaries</button>
+        <button class="tab-btn" id="settings-tab">Settings</button>
+      </div>
+
+      <div class="tab-content active" id="summaries-content">
+        <div class="content-header">
+          <h3>Recent Summaries</h3>
+          <button class="clear-btn" id="clear-summaries">Clear All</button>
+        </div>
+        <div id="summaries-container">
+          <!-- Summaries will be loaded here -->
+        </div>
+      </div>
+
+      <div class="tab-content" id="settings-content">
+        <div class="content-header">
+          <h3>Settings</h3>
+        </div>
+        <div id="settings-container">
+          <!-- Settings will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
