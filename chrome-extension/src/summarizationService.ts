@@ -5,7 +5,7 @@ import { SummaryRequest, SummaryResponse } from "./types";
  * Handles communication with the backend summarization API
  */
 export class SummarizationService {
-  private static readonly API_BASE_URL = "http://localhost:3000";
+  private static readonly API_BASE_URL = "https://clarityai-qrnk.onrender.com";
   private static readonly TIMEOUT_MS = 30000; // 30 seconds
 
   /**
