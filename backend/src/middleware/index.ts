@@ -32,7 +32,6 @@ export const errorHandler = (
   next: NextFunction
 ) => {
   console.error("Error:", error);
-
   res.status(500).json({
     error: "Internal server error",
     message:

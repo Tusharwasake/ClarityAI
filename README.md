@@ -2,6 +2,28 @@
 
 A Chrome extension that intelligently extracts and summarizes web content with AI-powered insights. Built with TypeScript, featuring smart content detection, one-click summarization, and a clean interface.
 
+## 🌐 Live Deployment
+
+- **Backend API**: [https://clarityai-qrnk.onrender.com](https://clarityai-qrnk.onrender.com)
+- **Health Check**: [https://clarityai-qrnk.onrender.com/health](https://clarityai-qrnk.onrender.com/health)
+- **GitHub Repository**: [https://github.com/Tusharwasake/ClarityAI](https://github.com/Tusharwasake/ClarityAI)
+
+## 🔧 Quick Install (Chrome Extension)
+
+### For Users:
+
+1. **Download Extension**: Clone or download this repository
+2. **Open Chrome**: Go to `chrome://extensions/`
+3. **Enable Developer Mode**: Toggle "Developer mode" in top-right
+4. **Load Extension**: Click "Load unpacked" → Select `chrome-extension/dist` folder
+5. **Start Using**: Visit any webpage and click the ClarityAI icon to summarize!
+
+### For Developers:
+
+1. **Build Extension**: `cd chrome-extension && npm install && npm run build`
+2. **Load in Chrome**: Point to the `dist` folder when loading unpacked
+3. **API Integration**: Extension connects to deployed backend automatically
+
 ## 🌟 Core Features
 
 ### Smart Content Detection & Extraction
@@ -84,22 +106,26 @@ e:\ClarityAI\
     └── webpack.config.js
 ```
 
-## 🛠️ Quick Start
+## 🛠️ Development Setup
 
 ### Prerequisites
 
 - Node.js 18+ and npm
 - Google Chrome browser
 
-### 1. Backend Setup
+### 1. Backend Development (Optional - Uses Live API)
+
+The extension connects to the live backend at `https://clarityai-qrnk.onrender.com` by default.
+For local development:
 
 ```powershell
 cd "e:\ClarityAI\backend"
 npm install
 npm run dev
+# Backend runs at http://localhost:3000
 ```
 
-### 2. Extension Setup
+### 2. Extension Development
 
 ```powershell
 cd "e:\ClarityAI\chrome-extension"
@@ -112,20 +138,44 @@ npm run build
 1. Open `chrome://extensions/`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select the `e:\ClarityAI\chrome-extension\` folder
+4. Select the `e:\ClarityAI\chrome-extension\dist\` folder
 
 ### 4. Test the Extension
 
 1. Visit any webpage with content
-2. Click the floating "Summarize" button
+2. Click the floating "Summarize" button or ClarityAI icon
 3. View the summary in the slide-out panel
 
-## 🌐 API Endpoints
+## 🌐 API Endpoints (Live)
 
-- **GET `/health`**: Health check
-- **POST `/api/summarize`**: Generate summary
-  - Body: `{ content: string, title: string, url: string }`
+**Base URL**: `https://clarityai-qrnk.onrender.com`
+
+- **GET `/`**: Welcome message
+- **GET `/health`**: Health check and server status
+- **POST `/api/summarize`**: Generate AI-powered summary
+  - Body: `{ content: string, title: string, url?: string }`
   - Returns: `{ points: string[], timestamp: string, wordCount: number }`
+- **POST `/api/extract`**: Extract content from URL
+  - Body: `{ url: string }`
+  - Returns: `{ title: string, content: string, excerpt: string, ... }`
+
+### Example API Usage:
+
+```javascript
+// Summarize text
+const response = await fetch(
+  "https://clarityai-qrnk.onrender.com/api/summarize",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content: "Your article content here...",
+      title: "Article Title",
+    }),
+  }
+);
+const summary = await response.json();
+```
 
 ## 📊 How It Works
 
@@ -162,16 +212,32 @@ npm run build
 
 ### Extension not working?
 
-1. Ensure backend is running at `http://localhost:3000`
-2. Check Chrome extensions page for errors
-3. Refresh extension after code changes
+1. ✅ **Backend is live**: Uses `https://clarityai-qrnk.onrender.com` (no local setup needed)
+2. ✅ **Check Chrome extensions**: Go to `chrome://extensions/` for errors
+3. ✅ **Reload extension**: After code changes, reload from extensions page
+4. ✅ **Check permissions**: Ensure extension has access to the current site
 
 ### Content not extracting?
 
-- Works best on article-style content
-- Some JavaScript-heavy sites may not work perfectly
-- Dynamic content may require page refresh
+- ✅ **Works best on articles**: News sites, blogs, Medium posts
+- ⚠️ **JavaScript-heavy sites**: May need page refresh for dynamic content
+- ⚠️ **Social media**: Limited support for Twitter, Facebook, etc.
+- ✅ **Test on**: CNN, BBC, Medium, Wikipedia for best results
+
+### API Issues?
+
+- ✅ **Check status**: Visit [https://clarityai-qrnk.onrender.com/health](https://clarityai-qrnk.onrender.com/health)
+- ⚠️ **Free tier limits**: Render free tier may have cold starts (first request slower)
+- ✅ **CORS enabled**: Should work from any domain
 
 ---
+
+## 🚀 Deployment Status
+
+| Component            | Status    | URL                                                                            |
+| -------------------- | --------- | ------------------------------------------------------------------------------ |
+| **Backend API**      | ✅ Live   | [https://clarityai-qrnk.onrender.com](https://clarityai-qrnk.onrender.com)     |
+| **Chrome Extension** | ✅ Ready  | Load from `/chrome-extension/dist` folder                                      |
+| **Repository**       | ✅ Public | [GitHub.com/Tusharwasake/ClarityAI](https://github.com/Tusharwasake/ClarityAI) |
 
 **ClarityAI** - Making web content digestible! 🎯

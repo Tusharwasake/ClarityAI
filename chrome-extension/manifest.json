@@ -4,7 +4,11 @@
   "version": "1.0.0",
   "description": "Intelligently extract and summarize web content with AI-powered insights",
   "permissions": ["activeTab", "storage", "scripting", "contextMenus"],
-  "host_permissions": ["https://clarityai-qrnk.onrender.com/*", "https://*/*", "http://*/*"],
+  "host_permissions": [
+    "https://clarityai-qrnk.onrender.com/*",
+    "https://*/*",
+    "http://*/*"
+  ],
   "background": {
     "service_worker": "dist/background.js"
   },

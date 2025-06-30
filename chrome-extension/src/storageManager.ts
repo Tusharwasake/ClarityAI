@@ -109,6 +109,19 @@ export class StorageManager {
   }
 
   /**
+   * Update extension settings (partial update)
+   */
+  static async updateSettings(updates: Partial<ExtensionSettings>): Promise<void> {
+    try {
+      const currentSettings = await this.getSettings();
+      const newSettings = { ...currentSettings, ...updates };
+      await this.saveSettings(newSettings);
+    } catch (error) {
+      console.error("Failed to update settings:", error);
+    }
+  }
+
+  /**
    * Check if the extension is enabled for a specific site
    */
   static async isEnabledForSite(url: string): Promise<boolean> {
@@ -143,6 +156,42 @@ export class StorageManager {
       await this.saveSettings(settings);
     } catch (error) {
       console.error("Failed to toggle site:", error);
+    }
+  }
+
+  /**
+   * Enable extension for a specific site
+   */
+  static async enableSite(url: string): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      const hostname = new URL(url).hostname;
+      
+      settings.disabledSites = settings.disabledSites.filter(
+        (site) => site !== hostname
+      );
+      
+      await this.saveSettings(settings);
+    } catch (error) {
+      console.error("Failed to enable site:", error);
+    }
+  }
+
+  /**
+   * Disable extension for a specific site
+   */
+  static async disableSite(url: string): Promise<void> {
+    try {
+      const settings = await this.getSettings();
+      const hostname = new URL(url).hostname;
+      
+      if (!settings.disabledSites.includes(hostname)) {
+        settings.disabledSites.push(hostname);
+      }
+      
+      await this.saveSettings(settings);
+    } catch (error) {
+      console.error("Failed to disable site:", error);
     }
   }
 

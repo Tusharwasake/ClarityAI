@@ -1,344 +1,314 @@
-import { ContentExtractor } from "./contentExtractor";
+import { extractContent, shouldProcessPage, isLongFormContent } from "./contentExtractor";
 import { StorageManager } from "./storageManager";
-import { SummarizationService } from "./summarizationService";
+import { summarize } from "./summarizationService";
 import { Summary } from "./types";
 
 /**
- * Content Script - Runs on every page
- * Handles floating button, smart trigger detection, and content interaction
+ * Content Script - Simple functional approach
  */
-class ClarityAIContent {
-  private floatingButton: HTMLElement | null = null;
-  private summaryPanel: HTMLElement | null = null;
-  private isProcessing = false;
-  private notificationShown = false;
 
-  constructor() {
-    this.init();
+// Global state
+let floatingButton: HTMLElement | null = null;
+let summaryPanel: HTMLElement | null = null;
+let isProcessing = false;
+let notificationShown = false;
+
+/**
+ * Initialize content script
+ */
+async function initContent(): Promise<void> {
+  // Check if this page should be processed
+  if (!shouldProcessPage()) {
+    return;
   }
 
-  /**
-   * Initialize the content script
-   */
-  private async init(): Promise<void> {
-    // Check if this page should be processed
-    if (!ContentExtractor.shouldProcessPage()) {
-      return;
-    }
+  // Check if extension is enabled for this site
+  const isEnabled = await StorageManager.isEnabledForSite(window.location.href);
+  if (!isEnabled) return;
 
-    // Check if extension is enabled for this site
-    const isEnabled = await StorageManager.isEnabledForSite(
-      window.location.href
-    );
-    if (!isEnabled) return;
-
-    // Wait for DOM to be ready
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => this.setup());
-    } else {
-      this.setup();
-    }
-  }
-
-  /**
-   * Setup the extension UI and functionality
-   */
-  private async setup(): Promise<void> {
-    await this.createFloatingButton();
-    await this.setupSmartTrigger();
-  }
-
-  /**
-   * Create the floating summarize button
-   */
-  private async createFloatingButton(): Promise<void> {
-    // Remove existing button if present
-    if (this.floatingButton) {
-      this.floatingButton.remove();
-    }
-
-    this.floatingButton = document.createElement("div");
-    this.floatingButton.id = "clarityai-floating-button";
-    this.floatingButton.innerHTML = `
-      <div class="clarityai-btn-content">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Summarize</span>
-      </div>
-    `;
-
-    this.floatingButton.addEventListener("click", () =>
-      this.handleSummarizeClick()
-    );
-    document.body.appendChild(this.floatingButton);
-  }
-
-  /**
-   * Smart Trigger Detection - Auto-suggest summarization for long content
-   */
-  private async setupSmartTrigger(): Promise<void> {
-    const settings = await StorageManager.getSettings();
-    if (!settings.autoDetect) return;
-
-    // Check if content is significant enough
-    if (ContentExtractor.isLongFormContent()) {
-      setTimeout(() => this.showSmartNotification(), 3000); // Show after 3 seconds
-    }
-  }
-
-  /**
-   * Show smart notification for long content
-   */
-  private showSmartNotification(): void {
-    if (this.notificationShown) return;
-    this.notificationShown = true;
-
-    const notification = document.createElement("div");
-    notification.id = "clarityai-smart-notification";
-    notification.innerHTML = `
-      <div class="clarityai-notification-content">
-        <span>📖 This looks like a long read. Summarize?</span>
-        <div class="clarityai-notification-actions">
-          <button class="clarityai-btn-yes">Yes</button>
-          <button class="clarityai-btn-no">No</button>
-        </div>
-      </div>
-    `;
-
-    notification
-      .querySelector(".clarityai-btn-yes")
-      ?.addEventListener("click", () => {
-        notification.remove();
-        this.handleSummarizeClick();
-      });
-
-    notification
-      .querySelector(".clarityai-btn-no")
-      ?.addEventListener("click", () => {
-        notification.remove();
-      });
-
-    document.body.appendChild(notification);
-
-    // Auto-hide after 8 seconds
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.remove();
-      }
-    }, 8000);
-  }
-
-  /**
-   * Handle summarize button click
-   */
-  private async handleSummarizeClick(): Promise<void> {
-    if (this.isProcessing) return;
-
-    try {
-      this.isProcessing = true;
-      this.updateButtonState("loading");
-
-      // Extract content
-      const extraction = ContentExtractor.extractContent();
-
-      if (extraction.wordCount < 50) {
-        this.showError("Not enough content to summarize");
-        return;
-      }
-
-      // Generate summary
-      const summaryResponse = await SummarizationService.summarize({
-        content: extraction.content,
-        title: extraction.title,
-        url: extraction.url,
-      });
-
-      const summary: Summary = {
-        id: StorageManager.generateSummaryId(),
-        url: extraction.url,
-        title: extraction.title,
-        points: summaryResponse.points,
-        timestamp: Date.now(),
-        wordCount: extraction.wordCount,
-      };
-
-      // Save to storage
-      await StorageManager.saveSummary(summary);
-
-      // Show summary panel
-      this.showSummaryPanel(summary);
-    } catch (error) {
-      console.error("Summarization error:", error);
-      this.showError("Failed to generate summary. Please try again.");
-    } finally {
-      this.isProcessing = false;
-      this.updateButtonState("ready");
-    }
-  }
-
-  /**
-   * Update floating button state
-   */
-  private updateButtonState(state: "ready" | "loading"): void {
-    if (!this.floatingButton) return;
-
-    const content = this.floatingButton.querySelector(".clarityai-btn-content");
-    if (!content) return;
-
-    if (state === "loading") {
-      content.innerHTML = `
-        <div class="clarityai-spinner"></div>
-        <span>Processing...</span>
-      `;
-      this.floatingButton.classList.add("loading");
-    } else {
-      content.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Summarize</span>
-      `;
-      this.floatingButton.classList.remove("loading");
-    }
-  }
-
-  /**
-   * Show summary in slide-out panel
-   */
-  private showSummaryPanel(summary: Summary): void {
-    // Remove existing panel
-    if (this.summaryPanel) {
-      this.summaryPanel.remove();
-    }
-
-    this.summaryPanel = document.createElement("div");
-    this.summaryPanel.id = "clarityai-summary-panel";
-    this.summaryPanel.innerHTML = `
-      <div class="clarityai-panel-header">
-        <h3>📖 Summary</h3>
-        <button class="clarityai-close-btn">×</button>
-      </div>
-      <div class="clarityai-panel-content">
-        <div class="clarityai-summary-meta">
-          <h4>${summary.title}</h4>
-          <p class="clarityai-meta-info">${
-            summary.wordCount
-          } words • ${new Date(summary.timestamp).toLocaleDateString()}</p>
-        </div>
-        <div class="clarityai-summary-points">
-          ${summary.points
-            .map(
-              (point, i) => `
-            <div class="clarityai-point">
-              <span class="clarityai-point-number">${i + 1}</span>
-              <span class="clarityai-point-text">${point}</span>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-        <div class="clarityai-panel-actions">
-          <button class="clarityai-copy-btn">📋 Copy Summary</button>
-          <button class="clarityai-export-btn">📄 Export</button>
-        </div>
-      </div>
-    `;
-
-    // Event listeners
-    this.summaryPanel
-      .querySelector(".clarityai-close-btn")
-      ?.addEventListener("click", () => {
-        this.summaryPanel?.remove();
-      });
-
-    this.summaryPanel
-      .querySelector(".clarityai-copy-btn")
-      ?.addEventListener("click", () => {
-        this.copySummary(summary);
-      });
-
-    this.summaryPanel
-      .querySelector(".clarityai-export-btn")
-      ?.addEventListener("click", () => {
-        this.exportSummary(summary);
-      });
-
-    document.body.appendChild(this.summaryPanel);
-
-    // Animate in
-    setTimeout(() => {
-      this.summaryPanel?.classList.add("show");
-    }, 10);
-  }
-
-  /**
-   * Copy summary to clipboard
-   */
-  private async copySummary(summary: Summary): Promise<void> {
-    try {
-      const text = StorageManager.exportSummaryAsText(summary);
-      await navigator.clipboard.writeText(text);
-
-      // Show success feedback
-      const btn = this.summaryPanel?.querySelector(".clarityai-copy-btn");
-      if (btn) {
-        const originalText = btn.textContent;
-        btn.textContent = "✅ Copied!";
-        setTimeout(() => {
-          btn.textContent = originalText;
-        }, 2000);
-      }
-    } catch (error) {
-      console.error("Failed to copy summary:", error);
-      this.showError("Failed to copy summary");
-    }
-  }
-
-  /**
-   * Export summary as markdown file
-   */
-  private exportSummary(summary: Summary): void {
-    try {
-      const markdown = StorageManager.exportSummaryAsMarkdown(summary);
-      const blob = new Blob([markdown], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${summary.title
-        .replace(/[^a-z0-9]/gi, "_")
-        .toLowerCase()}.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Failed to export summary:", error);
-      this.showError("Failed to export summary");
-    }
-  }
-
-  /**
-   * Show error message
-   */
-  private showError(message: string): void {
-    const errorDiv = document.createElement("div");
-    errorDiv.id = "clarityai-error";
-    errorDiv.innerHTML = `
-      <div class="clarityai-error-content">
-        <span>⚠️ ${message}</span>
-      </div>
-    `;
-
-    document.body.appendChild(errorDiv);
-
-    setTimeout(() => {
-      errorDiv.remove();
-    }, 4000);
+  // Wait for DOM to be ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => setupContent());
+  } else {
+    setupContent();
   }
 }
 
+/**
+ * Setup extension UI and functionality
+ */
+async function setupContent(): Promise<void> {
+  await createFloatingButton();
+  await setupSmartTrigger();
+}
+
+/**
+ * Create floating summarize button
+ */
+async function createFloatingButton(): Promise<void> {
+  // Remove existing button if present
+  if (floatingButton) {
+    floatingButton.remove();
+  }
+
+  floatingButton = document.createElement("div");
+  floatingButton.id = "clarityai-floating-button";
+  floatingButton.innerHTML = `
+    <div class="clarityai-btn-content">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>Summarize</span>
+    </div>
+  `;
+
+  floatingButton.addEventListener("click", () => handleSummarizeClick());
+  document.body.appendChild(floatingButton);
+}
+
+/**
+ * Handle summarize button click
+ */
+async function handleSummarizeClick(): Promise<void> {
+  if (isProcessing) return;
+
+  try {
+    isProcessing = true;
+    updateButtonState("loading");
+
+    // Extract content from page
+    const content = extractContent();
+    if (content.wordCount < 50) {
+      showError("Not enough content to summarize");
+      return;
+    }
+
+    // Call backend API for summarization
+    const summaryResponse = await summarize({
+      content: content.content,
+      title: content.title,
+      url: content.url
+    });
+
+    // Create summary object
+    const summary: Summary = {
+      id: StorageManager.generateSummaryId(),
+      url: content.url,
+      title: content.title,
+      points: summaryResponse.points,
+      timestamp: Date.now(),
+      wordCount: content.wordCount
+    };
+
+    // Save and display summary
+    await StorageManager.saveSummary(summary);
+    showSummaryPanel(summary);
+
+  } catch (error) {
+    console.error("Summarization error:", error);
+    showError("Failed to generate summary. Please try again.");
+  } finally {
+    isProcessing = false;
+    updateButtonState("ready");
+  }
+}
+
+/**
+ * Update button state
+ */
+function updateButtonState(state: "ready" | "loading"): void {
+  if (!floatingButton) return;
+
+  const buttonContent = floatingButton.querySelector(".clarityai-btn-content");
+  if (!buttonContent) return;
+
+  if (state === "loading") {
+    buttonContent.innerHTML = `
+      <div class="clarityai-spinner"></div>
+      <span>Processing...</span>
+    `;
+    floatingButton.classList.add("loading");
+  } else {
+    buttonContent.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>Summarize</span>
+    `;
+    floatingButton.classList.remove("loading");
+  }
+}
+
+/**
+ * Show summary panel
+ */
+function showSummaryPanel(summary: Summary): void {
+  // Remove existing panel
+  if (summaryPanel) {
+    summaryPanel.remove();
+  }
+
+  summaryPanel = document.createElement("div");
+  summaryPanel.id = "clarityai-summary-panel";
+  summaryPanel.innerHTML = `
+    <div class="clarityai-panel-header">
+      <h3>📖 Summary</h3>
+      <button class="clarityai-close-btn">×</button>
+    </div>
+    <div class="clarityai-panel-content">
+      <div class="clarityai-summary-meta">
+        <h4>${summary.title}</h4>
+        <p class="clarityai-meta-info">${summary.wordCount} words • ${new Date(summary.timestamp).toLocaleDateString()}</p>
+      </div>
+      <div class="clarityai-summary-points">
+        ${summary.points.map((point, index) => `
+          <div class="clarityai-point">
+            <span class="clarityai-point-number">${index + 1}</span>
+            <span class="clarityai-point-text">${point}</span>
+          </div>
+        `).join("")}
+      </div>
+      <div class="clarityai-panel-actions">
+        <button class="clarityai-copy-btn">📋 Copy Summary</button>
+        <button class="clarityai-export-btn">📄 Export</button>
+      </div>
+    </div>
+  `;
+
+  // Add event listeners
+  summaryPanel.querySelector(".clarityai-close-btn")?.addEventListener("click", () => {
+    summaryPanel?.remove();
+  });
+
+  summaryPanel.querySelector(".clarityai-copy-btn")?.addEventListener("click", () => {
+    copySummary(summary);
+  });
+
+  summaryPanel.querySelector(".clarityai-export-btn")?.addEventListener("click", () => {
+    exportSummary(summary);
+  });
+
+  document.body.appendChild(summaryPanel);
+
+  // Show animation
+  setTimeout(() => {
+    summaryPanel?.classList.add("show");
+  }, 10);
+}
+
+/**
+ * Copy summary to clipboard
+ */
+async function copySummary(summary: Summary): Promise<void> {
+  try {
+    const summaryText = StorageManager.exportSummaryAsText(summary);
+    await navigator.clipboard.writeText(summaryText);
+
+    const copyBtn = summaryPanel?.querySelector(".clarityai-copy-btn");
+    if (copyBtn) {
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = "✅ Copied!";
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+      }, 2000);
+    }
+  } catch (error) {
+    console.error("Failed to copy summary:", error);
+    showError("Failed to copy summary");
+  }
+}
+
+/**
+ * Export summary as file
+ */
+function exportSummary(summary: Summary): void {
+  try {
+    const summaryMarkdown = StorageManager.exportSummaryAsMarkdown(summary);
+    const blob = new Blob([summaryMarkdown], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${summary.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Failed to export summary:", error);
+    showError("Failed to export summary");
+  }
+}
+
+/**
+ * Setup smart trigger for long content
+ */
+async function setupSmartTrigger(): Promise<void> {
+  const settings = await StorageManager.getSettings();
+  if (!settings.autoDetect) return;
+
+  // Check if content is long enough
+  if (isLongFormContent()) {
+    setTimeout(() => showSmartNotification(), 3000);
+  }
+}
+
+/**
+ * Show smart notification
+ */
+function showSmartNotification(): void {
+  if (notificationShown) return;
+  notificationShown = true;
+
+  const notification = document.createElement("div");
+  notification.id = "clarityai-smart-notification";
+  notification.innerHTML = `
+    <div class="clarityai-notification-content">
+      <span>📖 This looks like a long read. Summarize?</span>
+      <div class="clarityai-notification-actions">
+        <button class="clarityai-btn-yes">Yes</button>
+        <button class="clarityai-btn-no">No</button>
+      </div>
+    </div>
+  `;
+
+  notification.querySelector(".clarityai-btn-yes")?.addEventListener("click", () => {
+    notification.remove();
+    handleSummarizeClick();
+  });
+
+  notification.querySelector(".clarityai-btn-no")?.addEventListener("click", () => {
+    notification.remove();
+  });
+
+  document.body.appendChild(notification);
+
+  // Auto-remove after 8 seconds
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, 8000);
+}
+
+/**
+ * Show error message
+ */
+function showError(message: string): void {
+  const errorDiv = document.createElement("div");
+  errorDiv.id = "clarityai-error";
+  errorDiv.innerHTML = `
+    <div class="clarityai-error-content">
+      <span>⚠️ ${message}</span>
+    </div>
+  `;
+
+  document.body.appendChild(errorDiv);
+
+  setTimeout(() => {
+    errorDiv.remove();
+  }, 4000);
+}
+
 // Initialize when script loads
-new ClarityAIContent();
+initContent();
