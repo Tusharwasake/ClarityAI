@@ -1,4 +1,8 @@
-import { extractContent, shouldProcessPage, isLongFormContent } from "./contentExtractor";
+import {
+  extractContent,
+  shouldProcessPage,
+  isLongFormContent,
+} from "./contentExtractor";
 import { StorageManager } from "./storageManager";
 import { summarize } from "./summarizationService";
 import { Summary } from "./types";
@@ -87,7 +91,7 @@ async function handleSummarizeClick(): Promise<void> {
     const summaryResponse = await summarize({
       content: content.content,
       title: content.title,
-      url: content.url
+      url: content.url,
     });
 
     // Create summary object
@@ -97,13 +101,12 @@ async function handleSummarizeClick(): Promise<void> {
       title: content.title,
       points: summaryResponse.points,
       timestamp: Date.now(),
-      wordCount: content.wordCount
+      wordCount: content.wordCount,
     };
 
     // Save and display summary
     await StorageManager.saveSummary(summary);
     showSummaryPanel(summary);
-
   } catch (error) {
     console.error("Summarization error:", error);
     showError("Failed to generate summary. Please try again.");
@@ -158,15 +161,21 @@ function showSummaryPanel(summary: Summary): void {
     <div class="clarityai-panel-content">
       <div class="clarityai-summary-meta">
         <h4>${summary.title}</h4>
-        <p class="clarityai-meta-info">${summary.wordCount} words • ${new Date(summary.timestamp).toLocaleDateString()}</p>
+        <p class="clarityai-meta-info">${summary.wordCount} words • ${new Date(
+    summary.timestamp
+  ).toLocaleDateString()}</p>
       </div>
       <div class="clarityai-summary-points">
-        ${summary.points.map((point, index) => `
+        ${summary.points
+          .map(
+            (point, index) => `
           <div class="clarityai-point">
             <span class="clarityai-point-number">${index + 1}</span>
             <span class="clarityai-point-text">${point}</span>
           </div>
-        `).join("")}
+        `
+          )
+          .join("")}
       </div>
       <div class="clarityai-panel-actions">
         <button class="clarityai-copy-btn">📋 Copy Summary</button>
@@ -176,17 +185,23 @@ function showSummaryPanel(summary: Summary): void {
   `;
 
   // Add event listeners
-  summaryPanel.querySelector(".clarityai-close-btn")?.addEventListener("click", () => {
-    summaryPanel?.remove();
-  });
+  summaryPanel
+    .querySelector(".clarityai-close-btn")
+    ?.addEventListener("click", () => {
+      summaryPanel?.remove();
+    });
 
-  summaryPanel.querySelector(".clarityai-copy-btn")?.addEventListener("click", () => {
-    copySummary(summary);
-  });
+  summaryPanel
+    .querySelector(".clarityai-copy-btn")
+    ?.addEventListener("click", () => {
+      copySummary(summary);
+    });
 
-  summaryPanel.querySelector(".clarityai-export-btn")?.addEventListener("click", () => {
-    exportSummary(summary);
-  });
+  summaryPanel
+    .querySelector(".clarityai-export-btn")
+    ?.addEventListener("click", () => {
+      exportSummary(summary);
+    });
 
   document.body.appendChild(summaryPanel);
 
@@ -226,10 +241,12 @@ function exportSummary(summary: Summary): void {
     const summaryMarkdown = StorageManager.exportSummaryAsMarkdown(summary);
     const blob = new Blob([summaryMarkdown], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${summary.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
+    link.download = `${summary.title
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase()}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -272,14 +289,18 @@ function showSmartNotification(): void {
     </div>
   `;
 
-  notification.querySelector(".clarityai-btn-yes")?.addEventListener("click", () => {
-    notification.remove();
-    handleSummarizeClick();
-  });
+  notification
+    .querySelector(".clarityai-btn-yes")
+    ?.addEventListener("click", () => {
+      notification.remove();
+      handleSummarizeClick();
+    });
 
-  notification.querySelector(".clarityai-btn-no")?.addEventListener("click", () => {
-    notification.remove();
-  });
+  notification
+    .querySelector(".clarityai-btn-no")
+    ?.addEventListener("click", () => {
+      notification.remove();
+    });
 
   document.body.appendChild(notification);
 

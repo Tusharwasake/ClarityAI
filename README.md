@@ -6,7 +6,16 @@ A Chrome extension that intelligently extracts and summarizes web content with A
 
 - **Backend API**: [https://clarityai-qrnk.onrender.com](https://clarityai-qrnk.onrender.com)
 - **Health Check**: [https://clarityai-qrnk.onrender.com/health](https://clarityai-qrnk.onrender.com/health)
+- **Privacy Policy**: [https://tusharwasake.github.io/ClarityAI/privacy-policy.html](https://tusharwasake.github.io/ClarityAI/privacy-policy.html)
 - **GitHub Repository**: [https://github.com/Tusharwasake/ClarityAI](https://github.com/Tusharwasake/ClarityAI)
+
+## 📦 Chrome Web Store Status
+
+**Version 1.0.1** - Privacy Policy Compliance Update
+- ✅ Added comprehensive privacy policy
+- ✅ Updated manifest with privacy policy URL
+- ✅ Ready for Chrome Web Store resubmission
+- 📄 See `CHROME_STORE_PRIVACY_FIX.md` for details
 
 ## 🔧 Quick Install (Chrome Extension)
 

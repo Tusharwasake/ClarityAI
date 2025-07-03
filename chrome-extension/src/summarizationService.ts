@@ -11,7 +11,9 @@ const TIMEOUT_MS = 30000; // 30 seconds
 /**
  * Generate summary from content
  */
-export async function summarize(request: SummaryRequest): Promise<SummaryResponse> {
+export async function summarize(
+  request: SummaryRequest
+): Promise<SummaryResponse> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -28,34 +30,35 @@ export async function summarize(request: SummaryRequest): Promise<SummaryRespons
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: SummaryResponse = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Summarization failed:", error);
-
-      if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          throw new Error("Request timed out. Please try again.");
-        }
-        throw error;
-      }
-
-      throw new Error("An unexpected error occurred");
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data: SummaryResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Summarization failed:", error);
+
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        throw new Error("Request timed out. Please try again.");
+      }
+      throw error;
+    }
+
+    throw new Error("An unexpected error occurred");
+  }
 }
 
 /**
  * Generate fallback summary (client-side basic summarization)
  * Used when API is unavailable
  */
-export function generateFallbackSummary(content: string, title: string): string[] {
+export function generateFallbackSummary(
+  content: string,
+  title: string
+): string[] {
   // Simple extractive summarization
-  const sentences = content
-    .split(/[.!?]+/)
-    .filter((s) => s.trim().length > 20);
+  const sentences = content.split(/[.!?]+/).filter((s) => s.trim().length > 20);
 
   if (sentences.length <= 3) {
     return sentences.map((s) => s.trim()).filter((s) => s.length > 0);

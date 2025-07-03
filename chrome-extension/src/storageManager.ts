@@ -111,7 +111,9 @@ export class StorageManager {
   /**
    * Update extension settings (partial update)
    */
-  static async updateSettings(updates: Partial<ExtensionSettings>): Promise<void> {
+  static async updateSettings(
+    updates: Partial<ExtensionSettings>
+  ): Promise<void> {
     try {
       const currentSettings = await this.getSettings();
       const newSettings = { ...currentSettings, ...updates };
@@ -166,11 +168,11 @@ export class StorageManager {
     try {
       const settings = await this.getSettings();
       const hostname = new URL(url).hostname;
-      
+
       settings.disabledSites = settings.disabledSites.filter(
         (site) => site !== hostname
       );
-      
+
       await this.saveSettings(settings);
     } catch (error) {
       console.error("Failed to enable site:", error);
@@ -184,11 +186,11 @@ export class StorageManager {
     try {
       const settings = await this.getSettings();
       const hostname = new URL(url).hostname;
-      
+
       if (!settings.disabledSites.includes(hostname)) {
         settings.disabledSites.push(hostname);
       }
-      
+
       await this.saveSettings(settings);
     } catch (error) {
       console.error("Failed to disable site:", error);

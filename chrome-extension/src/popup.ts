@@ -113,8 +113,9 @@ async function loadSummaries(): Promise<void> {
 
     summariesContainer.innerHTML = summaries
       .sort((a, b) => b.timestamp - a.timestamp)
-      .map((summary, index) => 
-        `
+      .map(
+        (summary, index) =>
+          `
         <div class="summary-item">
           <div class="summary-header">
             <h3 class="summary-title">${escapeHtml(summary.title)}</h3>
@@ -129,9 +130,11 @@ async function loadSummaries(): Promise<void> {
           </div>
           <div class="summary-points">
             ${summary.points
-              .map(point => `<div class="summary-point">• ${escapeHtml(point)}</div>`)
-              .join("")
-            }
+              .map(
+                (point) =>
+                  `<div class="summary-point">• ${escapeHtml(point)}</div>`
+              )
+              .join("")}
           </div>
           <div class="summary-meta">
             <span class="summary-date">
@@ -253,28 +256,34 @@ async function loadSettings(): Promise<void> {
  */
 function setupSettingsListeners(): void {
   // Global enable/disable
-  document.getElementById("enabledGlobal")?.addEventListener("change", async (e) => {
-    const enabled = (e.target as HTMLInputElement).checked;
-    await StorageManager.updateSettings({ enabled });
-  });
+  document
+    .getElementById("enabledGlobal")
+    ?.addEventListener("change", async (e) => {
+      const enabled = (e.target as HTMLInputElement).checked;
+      await StorageManager.updateSettings({ enabled });
+    });
 
   // Auto-detect toggle
-  document.getElementById("autoDetect")?.addEventListener("change", async (e) => {
-    const autoDetect = (e.target as HTMLInputElement).checked;
-    await StorageManager.updateSettings({ autoDetect });
-  });
+  document
+    .getElementById("autoDetect")
+    ?.addEventListener("change", async (e) => {
+      const autoDetect = (e.target as HTMLInputElement).checked;
+      await StorageManager.updateSettings({ autoDetect });
+    });
 
   // Current site toggle
-  document.getElementById("currentSite")?.addEventListener("change", async (e) => {
-    const enabled = (e.target as HTMLInputElement).checked;
-    if (currentTab?.url) {
-      if (enabled) {
-        await StorageManager.enableSite(currentTab.url);
-      } else {
-        await StorageManager.disableSite(currentTab.url);
+  document
+    .getElementById("currentSite")
+    ?.addEventListener("change", async (e) => {
+      const enabled = (e.target as HTMLInputElement).checked;
+      if (currentTab?.url) {
+        if (enabled) {
+          await StorageManager.enableSite(currentTab.url);
+        } else {
+          await StorageManager.disableSite(currentTab.url);
+        }
       }
-    }
-  });
+    });
 
   // Remove site buttons
   document.querySelectorAll(".remove-site-btn").forEach((btn) => {
@@ -318,7 +327,10 @@ async function deleteSummary(summaryId: string): Promise<void> {
 /**
  * Show toast notification
  */
-function showToast(message: string, type: "success" | "error" = "success"): void {
+function showToast(
+  message: string,
+  type: "success" | "error" = "success"
+): void {
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
   toast.textContent = message;
