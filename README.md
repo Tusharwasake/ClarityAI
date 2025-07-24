@@ -12,6 +12,7 @@ A Chrome extension that intelligently extracts and summarizes web content with A
 ## 📦 Chrome Web Store Status
 
 **Version 1.0.1** - Privacy Policy Compliance Update
+
 - ✅ Added comprehensive privacy policy
 - ✅ Updated manifest with privacy policy URL
 - ✅ Ready for Chrome Web Store resubmission

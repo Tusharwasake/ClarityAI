@@ -1,20 +1,4 @@
-# Check current branch name
-git branch
-
-# Add all files including the .gitignore
-git add .
-
-# Create initial commit
-git commit -m "Initial commit with project files"
-
-# Check branch name again
-git branch
-
-# If branch is 'master', push to master:
-git push -u origin master
-
-# If branch is 'main', push to main:
-git push -u origin main# Dependencies
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -79,18 +63,12 @@ temp/
 # Optional eslint cache
 .eslintcache
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
+# Chrome extension
+*.zip
+test-*.html
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Docker
-docker-compose.override.yml
+# Documentation (temporary files)
+*_FIX.md
+*_FIXED.md
+ISSUES_*.md
+VERIFICATION_*.md
