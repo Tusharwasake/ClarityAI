@@ -5,7 +5,11 @@ import { SummaryRequest, SummaryResponse } from "./types";
  * Handles communication with the backend summarization API
  */
 
-const API_BASE_URL = "https://clarityai-qrnk.onrender.com";
+// Configuration for API endpoint
+const IS_DEVELOPMENT = true; // Set to true for local development
+const API_BASE_URL = IS_DEVELOPMENT
+  ? "http://localhost:3000"
+  : "https://clarityai-qrnk.onrender.com";
 const TIMEOUT_MS = 30000; // 30 seconds
 
 /**
