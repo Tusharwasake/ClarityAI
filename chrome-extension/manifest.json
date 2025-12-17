@@ -4,21 +4,30 @@
   "version": "1.0.4",
   "description": "Intelligently extract and summarize web content with AI-powered insights",
   "homepage_url": "https://github.com/Tusharwasake/ClarityAI",
-  "privacy_policy": "https://tusharwasake.github.io/ClarityAI/",
-  "permissions": ["activeTab", "storage", "scripting", "contextMenus"],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus"
+  ],
   "host_permissions": [
     "https://clarityai-qrnk.onrender.com/*",
     "https://*/*",
     "http://*/*"
   ],
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["dist/content.js"],
-      "css": ["styles/content.css"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles/content.css"
+      ]
     }
   ],
   "action": {
@@ -39,8 +48,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["icons/*", "styles/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "icons/*",
+        "styles/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

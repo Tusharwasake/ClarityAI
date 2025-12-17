@@ -32,8 +32,9 @@ export interface SummaryRequest {
 }
 
 export interface SummaryResponse {
-  points: string[];
-  timestamp: string;
-  wordCount: number;
+  summary: string[];
+  title?: string;
+  timestamp?: string;
+  wordCount?: number;
   method?: "ai" | "local";
 }

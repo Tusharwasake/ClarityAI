@@ -1,14 +1,12 @@
 import { StorageManager } from "./storageManager";
 import { Summary, ExtensionSettings } from "./types";
-
-/**
- * Popup Script - Simple functional approach
- */
+import { summarize } from "./summarizationService";
 
 // Global state
 let currentTab: chrome.tabs.Tab | null = null;
 let summariesContainer: HTMLElement | null = null;
 let settingsContainer: HTMLElement | null = null;
+let summarizeBtn: HTMLElement | null = null;
 
 /**
  * Initialize the popup when DOM loads
@@ -25,6 +23,12 @@ async function initPopup(): Promise<void> {
   setupUI();
   await loadSummaries();
   await loadSettings();
+
+  // Setup summarize button
+  summarizeBtn = document.getElementById("summarize-btn");
+  if (summarizeBtn) {
+    summarizeBtn.addEventListener("click", handleSummarizeClick);
+  }
 }
 
 /**
@@ -93,6 +97,68 @@ function switchTab(tabIndex: number): void {
 }
 
 /**
+ * Handle Summarize Button Click
+ */
+async function handleSummarizeClick(): Promise<void> {
+  if (!currentTab?.id || !summarizeBtn) return;
+
+  try {
+    updateButtonState("loading");
+
+    // 1. Get content from the page
+    const response = await chrome.tabs.sendMessage(currentTab.id, { action: "GET_CONTENT" });
+
+    if (!response || !response.success) {
+      throw new Error(response?.error || "Failed to get page content");
+    }
+
+    const { content, title, url } = response.data;
+
+    // 2. Summarize content
+    const summaryResponse = await summarize({
+      content,
+      title,
+      url
+    });
+
+    // 3. Save Summary
+    const summary: Summary = {
+      id: StorageManager.generateSummaryId(),
+      url: url,
+      title: summaryResponse.title || title,
+      points: summaryResponse.summary,
+      timestamp: Date.now(),
+      wordCount: content.split(/\s+/).length,
+    };
+
+    await StorageManager.saveSummary(summary);
+
+    // 4. Reload UI
+    await loadSummaries();
+
+    showToast("Summary generated!", "success");
+
+  } catch (error) {
+    console.error("Summarization failed:", error);
+    showToast("Failed to summarize: " + (error instanceof Error ? error.message : "Unknown error"), "error");
+  } finally {
+    updateButtonState("idle");
+  }
+}
+
+function updateButtonState(state: "idle" | "loading"): void {
+  if (!summarizeBtn) return;
+
+  if (state === "loading") {
+    summarizeBtn.innerHTML = `<span class="clarityai-spinner-sm"></span> Thinking...`;
+    summarizeBtn.setAttribute("disabled", "true");
+  } else {
+    summarizeBtn.innerHTML = `<span class="btn-icon">✨</span> Summarize Page`;
+    summarizeBtn.removeAttribute("disabled");
+  }
+}
+
+/**
  * Load and display summaries
  */
 async function loadSummaries(): Promise<void> {
@@ -104,12 +170,19 @@ async function loadSummaries(): Promise<void> {
     if (summaries.length === 0) {
       summariesContainer.innerHTML = `
         <div class="empty-state">
-          <p>📄 No summaries yet</p>
-          <p>Browse to any article and click the floating summarize button!</p>
+          <p>Ready to summarize!</p>
+          <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">Click the button above to get an instant AI summary of this page.</p>
         </div>
       `;
+      // Hide the "Recent Summaries" header and clear button when empty
+      const contentHeader = document.querySelector(".content-header") as HTMLElement;
+      if (contentHeader) contentHeader.style.display = "none";
       return;
     }
+
+    // Show the header if we have summaries
+    const contentHeader = document.querySelector(".content-header") as HTMLElement;
+    if (contentHeader) contentHeader.style.display = "flex";
 
     summariesContainer.innerHTML = summaries
       .sort((a, b) => b.timestamp - a.timestamp)
@@ -130,11 +203,11 @@ async function loadSummaries(): Promise<void> {
           </div>
           <div class="summary-points">
             ${summary.points
-              .map(
-                (point) =>
-                  `<div class="summary-point">• ${escapeHtml(point)}</div>`
-              )
-              .join("")}
+            .map(
+              (point) =>
+                `<div class="summary-point">• ${escapeHtml(point)}</div>`
+            )
+            .join("")}
           </div>
           <div class="summary-meta">
             <span class="summary-date">
@@ -192,27 +265,24 @@ async function loadSettings(): Promise<void> {
       <div class="settings-section">
         <div class="setting-item">
           <label class="setting-label">
-            <input type="checkbox" id="enabledGlobal" ${
-              settings.enabled ? "checked" : ""
-            }>
+            <input type="checkbox" id="enabledGlobal" ${settings.enabled ? "checked" : ""
+      }>
             <span>Enable ClarityAI globally</span>
           </label>
         </div>
         
         <div class="setting-item">
           <label class="setting-label">
-            <input type="checkbox" id="autoDetect" ${
-              settings.autoDetect ? "checked" : ""
-            }>
+            <input type="checkbox" id="autoDetect" ${settings.autoDetect ? "checked" : ""
+      }>
             <span>Auto-detect long articles</span>
           </label>
         </div>
 
         <div class="setting-item">
           <label class="setting-label">
-            <input type="checkbox" id="currentSite" ${
-              isEnabledForCurrentSite ? "checked" : ""
-            }>
+            <input type="checkbox" id="currentSite" ${isEnabledForCurrentSite ? "checked" : ""
+      }>
             <span>Enable for current site</span>
           </label>
           <div class="setting-description">
@@ -226,15 +296,15 @@ async function loadSettings(): Promise<void> {
           </label>
           <div class="disabled-sites">
             ${settings.disabledSites
-              .map(
-                (site) => `
+        .map(
+          (site) => `
                 <div class="disabled-site">
                   <span>${site}</span>
                   <button class="remove-site-btn" data-site="${site}">×</button>
                 </div>
               `
-              )
-              .join("")}
+        )
+        .join("")}
           </div>
         </div>
       </div>

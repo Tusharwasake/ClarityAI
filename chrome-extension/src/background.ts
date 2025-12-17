@@ -5,7 +5,7 @@
 
 // Extension installation
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("ClarityAI Extension installed");
+  // Extension installed
 });
 
 // Handle messages from content scripts and popup
