@@ -244,6 +244,7 @@ async function loadSummaries(): Promise<void> {
     summariesContainer.innerHTML = `
       <div class="error-state">
         <p>⚠️ Failed to load summaries</p>
+        <p style="font-size: 0.8rem; opacity: 0.8; margin-top: 5px;">${error instanceof Error ? error.message : "Unknown error"}</p>
       </div>
     `;
   }
