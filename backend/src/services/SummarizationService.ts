@@ -16,7 +16,7 @@ export const generateSummary = async (
   content: string,
   title: string
 ): Promise<string[]> => {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Create comprehensive user-focused prompt
   const prompt = `You're a smart web summarizer AI helping a busy reader understand this article quickly.
