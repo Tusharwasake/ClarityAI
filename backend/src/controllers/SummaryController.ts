@@ -34,6 +34,7 @@ export const summarize = async (req: Request, res: Response): Promise<void> => {
     console.error("Summarization error:", error);
     res.status(500).json({
       error: "Failed to generate summary",
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 };
