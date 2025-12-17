@@ -6,7 +6,7 @@ import { SummaryRequest, SummaryResponse } from "./types";
  */
 
 // Configuration for API endpoint
-const IS_DEVELOPMENT = true; // Set to true for local development
+const IS_DEVELOPMENT = false; // Set to true for local development
 const API_BASE_URL = IS_DEVELOPMENT
   ? "http://localhost:3000"
   : "https://clarityai-qrnk.onrender.com";

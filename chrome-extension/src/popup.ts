@@ -106,7 +106,13 @@ async function handleSummarizeClick(): Promise<void> {
     updateButtonState("loading");
 
     // 1. Get content from the page
-    const response = await chrome.tabs.sendMessage(currentTab.id, { action: "GET_CONTENT" });
+    let response;
+    try {
+      response = await chrome.tabs.sendMessage(currentTab.id, { action: "GET_CONTENT" });
+    } catch (msgError) {
+      console.error("Message error:", msgError);
+      throw new Error("Could not connect to page. Plase refresh the webpage and try again.");
+    }
 
     if (!response || !response.success) {
       throw new Error(response?.error || "Failed to get page content");
@@ -191,7 +197,7 @@ async function loadSummaries(): Promise<void> {
           `
         <div class="summary-item">
           <div class="summary-header">
-            <h3 class="summary-title">${escapeHtml(summary.title)}</h3>
+            <h3 class="summary-title">${escapeHtml(summary.title || "Untitled")}</h3>
             <div class="summary-actions">
               <button class="copy-btn" data-index="${index}" title="Copy summary">
                 📋
@@ -202,7 +208,7 @@ async function loadSummaries(): Promise<void> {
             </div>
           </div>
           <div class="summary-points">
-            ${summary.points
+            ${(summary.points || [])
             .map(
               (point) =>
                 `<div class="summary-point">• ${escapeHtml(point)}</div>`
